@@ -84,14 +84,14 @@ public static class ServiceCollectionExtensions
             options.Retry.ShouldHandle = args => ValueTask.FromResult(
                 args.Outcome.Result?.StatusCode == System.Net.HttpStatusCode.TooManyRequests);
 
-            // Disable circuit breaker for this client (we handle retries ourselves)
-            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(1);
+            // Keep circuit breaker effectively disabled without violating resilience validation rules.
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(20);
             options.CircuitBreaker.FailureRatio = 1.0; // Never open
             options.CircuitBreaker.MinimumThroughput = int.MaxValue;
 
-            // Disable timeout (we handle this ourselves)
-            options.TotalRequestTimeout.Timeout = Timeout.InfiniteTimeSpan;
-            options.AttemptTimeout.Timeout = Timeout.InfiniteTimeSpan;
+            // Use bounded timeout values required by resilience validation.
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(100);
         });
 
         return services;
