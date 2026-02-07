@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `AddExpoClient` now uses valid bounded resilience timeout defaults to avoid startup validation failures on modern `Microsoft.Extensions.Http.Resilience`.
+- Added tunable DI resilience settings in `ExpoClientOptions`: `AttemptTimeout` and `TotalRequestTimeout`.
+- `AddExpoClient` now respects configured retry and timeout values from `ExpoClientOptions`.
+
 ## [1.0.0] - 2026-02-02
 
 ### Added
