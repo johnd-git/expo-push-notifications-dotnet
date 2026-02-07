@@ -78,6 +78,8 @@ builder.Services.AddExpoClient(options =>
 {
     options.AccessToken = builder.Configuration["Expo:AccessToken"];
     options.MaxConcurrentRequests = 6;
+    options.AttemptTimeout = TimeSpan.FromSeconds(10);
+    options.TotalRequestTimeout = TimeSpan.FromSeconds(100);
 });
 
 // In your service
@@ -161,6 +163,8 @@ foreach (var chunk in expo.ChunkPushNotificationReceiptIds(receiptIds))
 | `MaxConcurrentRequests` | `6` | Maximum concurrent HTTP requests |
 | `RetryMinTimeout` | `1 second` | Minimum timeout between retries |
 | `MaxRetryAttempts` | `2` | Maximum retry attempts for rate-limited requests |
+| `AttemptTimeout` | `10 seconds` | Timeout for each HTTP attempt (DI only) |
+| `TotalRequestTimeout` | `100 seconds` | Total timeout including retries (DI only) |
 | `BaseUrl` | `https://exp.host` | API base URL (for testing) |
 
 ### Push Message Properties

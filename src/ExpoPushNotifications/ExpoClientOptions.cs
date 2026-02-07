@@ -50,6 +50,26 @@ public sealed class ExpoClientOptions
     public int MaxRetryAttempts { get; set; } = Constants.DefaultMaxRetryAttempts;
 
     /// <summary>
+    /// The timeout for each individual HTTP request attempt.
+    /// Default is 10 seconds.
+    /// </summary>
+    /// <remarks>
+    /// Applies when using <c>AddExpoClient</c> with dependency injection.
+    /// Must be between 10 milliseconds and 1 day.
+    /// </remarks>
+    public TimeSpan AttemptTimeout { get; set; } = TimeSpan.FromSeconds(Constants.DefaultAttemptTimeoutSeconds);
+
+    /// <summary>
+    /// The total timeout for an HTTP request, including retries.
+    /// Default is 100 seconds.
+    /// </summary>
+    /// <remarks>
+    /// Applies when using <c>AddExpoClient</c> with dependency injection.
+    /// Must be between 10 milliseconds and 1 day.
+    /// </remarks>
+    public TimeSpan TotalRequestTimeout { get; set; } = TimeSpan.FromSeconds(Constants.DefaultTotalRequestTimeoutSeconds);
+
+    /// <summary>
     /// The base URL for the Expo push notification service.
     /// Default is "https://exp.host".
     /// </summary>

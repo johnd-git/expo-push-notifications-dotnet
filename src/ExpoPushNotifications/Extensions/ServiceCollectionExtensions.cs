@@ -51,6 +51,9 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<ExpoClientOptions>? configure = null)
     {
+        var configuredOptions = new ExpoClientOptions();
+        configure?.Invoke(configuredOptions);
+
         // Configure options
         var optionsBuilder = services.AddOptions<ExpoClientOptions>();
         if (configure != null)
@@ -75,23 +78,22 @@ public static class ServiceCollectionExtensions
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.AccessToken);
             }
         })
-        .AddStandardResilienceHandler(options =>
+        .AddStandardResilienceHandler(resilienceOptions =>
         {
             // Configure retry policy for rate limiting
-            options.Retry.MaxRetryAttempts = Constants.DefaultMaxRetryAttempts;
-            options.Retry.BackoffType = DelayBackoffType.Exponential;
-            options.Retry.Delay = TimeSpan.FromMilliseconds(Constants.DefaultRetryMinTimeoutMs);
-            options.Retry.ShouldHandle = args => ValueTask.FromResult(
+            resilienceOptions.Retry.MaxRetryAttempts = configuredOptions.MaxRetryAttempts;
+            resilienceOptions.Retry.BackoffType = DelayBackoffType.Exponential;
+            resilienceOptions.Retry.Delay = configuredOptions.RetryMinTimeout;
+            resilienceOptions.Retry.ShouldHandle = args => ValueTask.FromResult(
                 args.Outcome.Result?.StatusCode == System.Net.HttpStatusCode.TooManyRequests);
 
-            // Disable circuit breaker for this client (we handle retries ourselves)
-            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(1);
-            options.CircuitBreaker.FailureRatio = 1.0; // Never open
-            options.CircuitBreaker.MinimumThroughput = int.MaxValue;
+            // Keep circuit breaker effectively disabled without violating resilience validation rules.
+            resilienceOptions.CircuitBreaker.SamplingDuration = GetCircuitBreakerSamplingDuration(configuredOptions.AttemptTimeout);
+            resilienceOptions.CircuitBreaker.FailureRatio = 1.0; // Never open
+            resilienceOptions.CircuitBreaker.MinimumThroughput = int.MaxValue;
 
-            // Disable timeout (we handle this ourselves)
-            options.TotalRequestTimeout.Timeout = Timeout.InfiniteTimeSpan;
-            options.AttemptTimeout.Timeout = Timeout.InfiniteTimeSpan;
+            resilienceOptions.AttemptTimeout.Timeout = configuredOptions.AttemptTimeout;
+            resilienceOptions.TotalRequestTimeout.Timeout = configuredOptions.TotalRequestTimeout;
         });
 
         return services;
@@ -131,5 +133,15 @@ public static class ServiceCollectionExtensions
         configureHttpClient(builder);
 
         return services;
+    }
+
+    private static TimeSpan GetCircuitBreakerSamplingDuration(TimeSpan attemptTimeout)
+    {
+        var minimumSamplingDuration = TimeSpan.FromSeconds(20);
+        var requiredSamplingDuration = TimeSpan.FromTicks(attemptTimeout.Ticks * 2);
+
+        return requiredSamplingDuration > minimumSamplingDuration
+            ? requiredSamplingDuration
+            : minimumSamplingDuration;
     }
 }

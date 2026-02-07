@@ -47,6 +47,16 @@ internal static class Constants
     public const int DefaultMaxRetryAttempts = 2;
 
     /// <summary>
+    /// The default timeout for each HTTP request attempt (in seconds).
+    /// </summary>
+    public const int DefaultAttemptTimeoutSeconds = 10;
+
+    /// <summary>
+    /// The default total timeout for an HTTP request including retries (in seconds).
+    /// </summary>
+    public const int DefaultTotalRequestTimeoutSeconds = 100;
+
+    /// <summary>
     /// The minimum payload size (in bytes) before compression is applied.
     /// </summary>
     public const int CompressionThresholdBytes = 1024;
