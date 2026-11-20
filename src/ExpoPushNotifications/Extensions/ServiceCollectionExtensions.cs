@@ -146,10 +146,10 @@ public static class ServiceCollectionExtensions
         switch (handler)
         {
             case SocketsHttpHandler socketsHandler:
-                socketsHandler.AutomaticDecompression = methods;
+                socketsHandler.AutomaticDecompression |= methods;
                 break;
             case HttpClientHandler clientHandler:
-                clientHandler.AutomaticDecompression = methods;
+                clientHandler.AutomaticDecompression |= methods;
                 break;
         }
     }
