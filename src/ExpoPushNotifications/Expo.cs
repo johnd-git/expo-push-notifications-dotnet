@@ -469,7 +469,13 @@ public sealed partial class Expo : IExpoClient, IDisposable
 
     private static HttpClient CreateHttpClient(ExpoClientOptions options)
     {
-        var client = new HttpClient();
+        // Expo gzips large responses, so the handler must decompress them.
+        // AutomaticDecompression also sends the matching Accept-Encoding header.
+        var handler = new HttpClientHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+        };
+        var client = new HttpClient(handler, disposeHandler: true);
         ConfigureHttpClient(client, options);
         return client;
     }
@@ -479,8 +485,6 @@ public sealed partial class Expo : IExpoClient, IDisposable
         client.BaseAddress ??= new Uri(options.BaseUrl);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-        client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
         client.DefaultRequestHeaders.UserAgent.ParseAdd($"expo-push-notifications-dotnet/{SdkVersion}");
 
         if (!string.IsNullOrEmpty(options.AccessToken))

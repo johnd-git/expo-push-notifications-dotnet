@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,8 +70,6 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri(options.BaseUrl);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-            client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
             client.DefaultRequestHeaders.UserAgent.ParseAdd($"expo-push-notifications-dotnet/{SdkVersion}");
 
             if (!string.IsNullOrEmpty(options.AccessToken))
@@ -78,6 +77,7 @@ public static class ServiceCollectionExtensions
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.AccessToken);
             }
         })
+        .ConfigurePrimaryHttpMessageHandler(EnableResponseDecompression)
         .AddStandardResilienceHandler(resilienceOptions =>
         {
             // Configure retry policy for rate limiting
@@ -120,8 +120,6 @@ public static class ServiceCollectionExtensions
             client.BaseAddress = new Uri(options.BaseUrl);
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-            client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
             client.DefaultRequestHeaders.UserAgent.ParseAdd($"expo-push-notifications-dotnet/{SdkVersion}");
 
             if (!string.IsNullOrEmpty(options.AccessToken))
@@ -130,9 +128,30 @@ public static class ServiceCollectionExtensions
             }
         });
 
+        builder.ConfigurePrimaryHttpMessageHandler(EnableResponseDecompression);
+
         configureHttpClient(builder);
 
         return services;
+    }
+
+    /// <summary>
+    /// Expo gzips large responses, so the primary handler must decompress them.
+    /// AutomaticDecompression also sends the matching Accept-Encoding header.
+    /// </summary>
+    private static void EnableResponseDecompression(HttpMessageHandler handler, IServiceProvider services)
+    {
+        const DecompressionMethods methods = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+        switch (handler)
+        {
+            case SocketsHttpHandler socketsHandler:
+                socketsHandler.AutomaticDecompression |= methods;
+                break;
+            case HttpClientHandler clientHandler:
+                clientHandler.AutomaticDecompression |= methods;
+                break;
+        }
     }
 
     private static TimeSpan GetCircuitBreakerSamplingDuration(TimeSpan attemptTimeout)
