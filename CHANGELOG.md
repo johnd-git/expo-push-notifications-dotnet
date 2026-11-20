@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Gzip-compressed responses from Expo are now decompressed. Sending to more than about 20 tokens no longer fails with "Expo responded with malformed JSON" ([#2](https://github.com/johnd-git/expo-push-notifications-dotnet/issues/2)).
+
 ### Changed
 
 - `AddExpoClient` now uses valid bounded resilience timeout defaults to avoid startup validation failures on modern `Microsoft.Extensions.Http.Resilience`.
