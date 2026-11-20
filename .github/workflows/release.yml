@@ -18,7 +18,7 @@ jobs:
   release:
     name: Build and Publish
     runs-on: ubuntu-latest
-    environment: prod
+    environment: production
 
     steps:
       - name: Checkout
