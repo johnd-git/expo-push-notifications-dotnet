@@ -12,11 +12,13 @@ env:
 
 permissions:
   contents: write
+  id-token: write # NuGet trusted publishing (OIDC)
 
 jobs:
   release:
     name: Build and Publish
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout
@@ -48,8 +50,14 @@ jobs:
       - name: Pack
         run: dotnet pack src/ExpoPushNotifications/ExpoPushNotifications.csproj --configuration Release --no-build -p:Version=${{ steps.version.outputs.VERSION }} --output ./nupkg
 
+      - name: NuGet login (trusted publishing)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: johnd
+
       - name: Push to NuGet
-        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
