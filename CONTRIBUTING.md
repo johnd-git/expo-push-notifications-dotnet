@@ -13,6 +13,7 @@ Thank you for your interest in contributing to expo-push-notifications-dotnet!
 ### Prerequisites
 
 - .NET 11.0 SDK (builds every target framework)
+- .NET 10.0 runtime (tests also run on `net10.0`)
 - Git
 
 ### Building
