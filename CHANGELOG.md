@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-19
+
 ### Fixed
 
 - Gzip-compressed responses from Expo are now decompressed. Sending to more than about 20 tokens no longer fails with "Expo responded with malformed JSON" ([#2](https://github.com/johnd-git/expo-push-notifications-dotnet/issues/2)).
+
+## [1.0.2] - 2026-02-07
 
 ### Changed
 
